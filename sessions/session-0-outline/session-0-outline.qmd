@@ -1,0 +1,107 @@
+---
+title: "Defra Skilful WG - Introduction to R"
+subtitle: "Series Outline"
+fontsize: "11"
+format:
+  html:
+    embed-resources: true
+    toc: true
+    toc-depth: 2
+    theme:
+      light: flatly
+      dark: darkly
+---
+
+## What is R?
+
+R is a *statistical* computing language. Used for data manipulation, data analysis and graphical display. Importantly R is free and open source software (FOSS) which means it is accessible to all. 
+
+## Why choose R?
+
+- Longevity: R is a stable language with a strong emphasis on maintaining backward compatibility. 
+- Data structures are native to the language.
+- Built-in graphics capabilities.
+- Extensibility: Users can create their own functions and packages, making R highly customizable.
+- Makes you think in terms of a workflow which is: repeatable to other cases; reproducible; and easy to maintain.
+- Has many uses: data analysis; data visualisation; dashboards; interactive reporting; automated pipelines.
+- Active and helpful community.
+- Transferable skill.
+- Productivity - reproducible and automatable pipelines can lead to more time being spent on other areas.
+
+## Series Information
+
+This series will run over six 1.5 hr "code along" interactive sessions on Wednesday afternoons. 
+
+No prior coding experienced is necessary.
+
+**Week 1: Introduction to R (7 May)**
+
+-   Overview: Introduction to R programming language and RStudio environment.
+-   Topics Covered:
+    -   Setting up R and RStudio
+    -   Basic R syntax and operations
+    -   Understanding data types and structures
+    -   Writing simple scripts
+    -   Reading and writing data from/to CSV
+
+**Week 2: Data Manipulation (14 May)** 
+
+- Overview: Techniques for manipulating data in R. 
+- Topics Covered: 
+  - Using {dplyr} for data manipulation 
+  - Filtering, selecting, and arranging data 
+  - Creating new variables 
+  - Summarizing data 
+  - Reading data from Excel
+
+**Week 3: Tidying Data (21 May)** 
+
+- Overview: Methods for cleaning and tidying data. 
+- Topics Covered: 
+  - Introduction to the {tidyr} package 
+  - Reshaping data by pivoting 
+  - Handling missing values 
+  - Combining and splitting datasets 
+  - Reading data from JSON
+
+**Week 4: Plotting (4 June)** 
+
+- Overview: Creating visualizations in R. 
+- Topics Covered: 
+  - Introduction to grammar of graphics and the {ggplot2} package
+  - Basic plots: scatter plots, bar charts, histograms, lines 
+  - Customizing plots: themes, labels, and colours 
+  - Saving and exporting plots
+
+**Week 5: Tables, Dates, and Strings (11 June)** 
+
+- Overview: Creating tables. Working with dates and string data. 
+- Topics Covered:
+  - Creating and manipulating tables 
+  - Saving and exporting tables 
+  - Handling dates 
+  - String operations 
+  - Formatting and parsing dates and strings 
+  - Basic web scraping to import webpage tables
+
+**Week 6: Functional Programming and Quarto (18 June)** 
+
+- Overview: Advanced topics in R programming. 
+- Topics Covered: 
+  - Introduction to functional programming techniques 
+  - Mapping functions 
+  - Introduction to Quarto 
+  - Using Quarto for dynamic documents
+
+## Goals
+
+By the end of this series, participants will:
+
+-   Understand R programming basics.
+-   Be able to manipulate and tidy data.
+-   Create informative and aesthetically pleasing visualizations.
+-   Handle dates and strings with ease.
+-   Apply functional programming techniques.
+-   Use Quarto for dynamic reporting.
+
+**Contact Details:** daniel.ocallaghan\@forestrycommission.gov.uk
