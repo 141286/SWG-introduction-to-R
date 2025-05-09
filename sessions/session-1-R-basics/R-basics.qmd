@@ -1,0 +1,411 @@
+---
+title: "Session 1: Introduction to R"
+date: today
+date-format: D MMMM YYYY
+fontsize: "11"
+format:
+  html:
+    code-line-numbers: true
+    highlight-style: a11y
+    theme:
+      light: flatly
+      dark: darkly
+    embed-resources: true
+    toc: true
+    toc-depth: 2
+---
+
+### This session will cover:
+
+-   Setting up R and RStudio
+-   Basic R syntax and operations
+-   Understanding R data types and structures
+-   Writing a simple script
+-   Functions
+-   Installing packages
+-   Importing data: CSV
+
+## R and RStudio
+
+R and RStudio, what is the difference? Why do I need the two?
+
+R is both a language and program. However working GUI that comes with R is not the most pleasant of experiences. 
+
+![R can be imagined as the skeleton of a car, the engine, the chassis *etc.*](images/engine-r.png){fig-align="center" width="600"}
+
+RStudio is an integrated development environment (IDE) for R. It is a user friendly interface for the R programming language making writing and running code much easier and more intuitive, as well as providing a host of addins to make your working life easier including: a console, syntax-highlighting editor that supports direct code execution (basically, colours your code and allows a user to select code to run on the fly), tools for plotting, history, debugging and workspace management.
+
+![RStudio can be imagined as all the extra parts that make a car comfortable and enjoyable to dive in.](images/car-rstudio.png){fig-align="center" width="600"}
+
+You do not need RStudio to code in R, but it makes life a lot easier.
+
+Other text editors and IDEs like VS Code are also available.
+
+### RStudio Layout
+
+![The RStudio layout. Source: Posit](https://docs.posit.co/ide/user/ide/guide/ui/images/rstudio-panes-labeled.jpeg){fig-alt="RStudio layout with four panels showing in the default positions: the source panel in the top left, the console panel on bottom left, the environment panel in the top right and output panel on the bottom right." fig-align="center"}
+
+-   **Source:** This is the text editor which allows you to write scripts.
+-   **Console:** The R console allows for code to be executed interactively and in a piecewise manner.
+-   **Environments:** This panel contains a number of tabs, including the Environment tab which will display saved R objects in the Global Environment.
+-   **Output:** This panel’s tabs allows to view files, plots, packages installed and access help documentation.
+
+### RStudio Settings
+
+RStudio settings are accessed through **Global Options...** from **Tools** in the menu bar.
+
+There various options that allow you to customise RStudio, from appearance, session setting *etc.*
+
+
+### RStudio Projects
+
+RStudio Projects are a way to organise your work in R. They help you manage your working directories, workspace and source documents efficiently. It allows you to work on different analytical task in a separate and isolated environment from other work.
+
+To create a RStudio Project, select the **Project** dropdown in the upper right hand corner.
+
+![](images/new-project.png){fig-align="center" width="746"}
+
+Select **New Project...**
+
+![](images/new-project-dropdown.png){fig-align="center" width="238"}
+
+Select **New Directory**
+
+![](images/new-project-select.png){fig-align="center" width="545"}
+
+Select New Project
+
+![](images/new-project-name.png){fig-align="center" width="418"}
+
+## The Basics
+
+R console can be used as a calculator. 
+
+```{r}
+10 + 4
+
+10 / 4
+
+10 * 4
+```
+
+But that is not very interesting and won't get us very far. 
+
+You can also assign values to variables using the assignment operator `<-`.
+
+```{r}
+x <- 10
+y <- 4
+
+x + y
+```
+
+
+### Writing a Script
+
+Whist it easy to execute code in the console, after a while it comes against limitations. So that is where scripts come in. 
+
+To set up a new blank script, click on the little plus sign in the top left of your screen underneath File. Then select **R Script**. (This can be achieved alternatively by entering SHIFT + CTRL + N)
+
+![](images/new-script.png)
+
+This will open a new R script in the source panel of RStudio.
+
+It’s good practice to put a name, a date and author at the top of scripts.
+
+``` r
+# Intro to R - week 1
+# Date: the current date
+# Author: name
+```
+
+
+## Data Types
+
+At the fundamental level, R has six basic data types. These are:
+
+-   integer
+-   double
+-   logical
+-   character
+-   complex (Not considered here)
+-   raw (Not considered here)
+
+### Numeric: Integer and Double
+
+Numeric values in R can be either integers (whole numbers) and doubles (floating-point numbers), but in general there is not much distinction between both in R and they are interchangeable.
+
+Scientific notation can be used to declare a numeric value. `1e3` is the equivalent of `1000`.
+
+::: callout-note
+In some code you might see a number followed by an L *e.g.* `x <- 2L` This explicitly defines `x` as an integer.
+:::
+
+#### Arithmetic operators
+
+We have already seen some arithmetic operators, but the following operators that be used on numeric types. 
+
+| Operator | Name                     | Example   |
+|----------|--------------------------|-----------|
+| `+`      | Addition                 | `x + y`   |
+| `-`      | Subtraction              | `x - y`   |
+| `*`      | Multiplication           | `x * y`   |
+| `/`      | Division                 | `x / y`   |
+| `^`      | Exponent                 | `x ^ y`   |
+| `%%`     | Modulus                  | `x %% y`  |
+| `%/%`    | Integer (Floor) Division | `x %/% y` |
+
+### Logical
+
+Logical values in R are used to represent boolean data. They have three possible values: `TRUE`, `FALSE` and `NA`.
+
+```{r}
+logical_value <- TRUE
+logical_value
+```
+
+::: callout-note
+`T` and `F` can also be used as shorthand for `TRUE` and `FALSE`, but it is not advisable to use as these shorthands can be overwritten.
+:::
+
+#### Logical operators
+
+Logical operators are used to perform logical operations on boolean values. Here are some common logical operators in R:
+
+| Operator | Name | Example |
+|----------|------|---------|
+| `&`      | AND  | `x & y` |
+| `|`      | OR   | `x | y` |
+| `!`      | NOT  | `!x`    |
+
+#### Comparison operators
+
+Comparison operators are used to compare values, where a boolean value returned.
+
+| Operator | Name                  | Example  |
+|----------|-----------------------|----------|
+| `==`     | Equal                 | `x == y` |
+| `!=`     | Not Equal             | `x != y` |
+| `>`      | Greater Than          | `x > y`  |
+| `<`      | Less Than             | `x < y`  |
+| `>=`     | Greater Than or Equal | `x >= y` |
+| `<=`     | Less Than or Equal    | `x <= y` |
+
+::: callout-tip
+When trying to determine if a value is `NULL` or `NA`, the above comparison operators do not work. *i.e.* `x == NULL` or `x != NA` will not work.
+
+Must use `is.null()` or `is.na()` instead.
+:::
+
+The logical and comparison operators allow for controlling the flow of how code that gets executed. The most common control flows are `if` and `if`-`else` statements.
+
+```{r}
+# Example of an if-else statement
+x <- 10
+
+if (x < 5) {
+  print("x is less than 5")
+} else if (x < 10) {
+  print("x is less than 10")
+} else {
+  print("x is greater than 10")
+}
+```
+
+### Character
+
+Characters in R are used to represent text data. They are surrounded by either a single `'` or double `"` quotes.
+
+```{r}
+char1 <- "hello"
+char1
+
+# Numbers surrounded by quotes become character type
+char2 <- "200"
+char2
+```
+
+Will see more about characters and strings in week 5.
+
+## Data Structures
+
+
+
+### Vectors
+
+Vectors are the simplest type of data structure in R. They can hold numeric, character, or logical data. All the elements of a vector must be of the same type.
+
+The combine function `c()` is used to create a vector of two or more elements. 
+
+```{r}
+# Numeric vector
+x <- c(1, 2, 3.5)
+x
+
+# Logical vector
+y <- c(TRUE, FALSE, TRUE)
+y
+
+# Character vector
+defra_group <- c("Defra Core", "EA", "NE", "MMO")
+defra_group
+```
+
+### Factors
+
+Factors are a special type of vector used to handle and store categorical data. A factor can be ordered or unordered.
+
+```{r}
+reviews <- c("good", "bad", "v bad", "bad", "good", "v good")
+reviews_fct <- factor(reviews)
+reviews_fct
+```
+
+However, the levels are not in a logical order. We can specify the this order using the `levels` parameter.
+
+```{r}
+reviews_fct_ordered <- factor(reviews, levels = c("v bad", "bad", "good", "v good"))
+reviews_fct_ordered
+```
+
+We will come back to factors when plotting (week 4 and 5)
+
+### Lists
+
+Lists are a collection of data, that can be of different types. 
+
+```{r}
+england <- list(
+  capital = "London",
+  population = 57112500,
+  devolved = FALSE
+)
+```
+
+Lists can be listed placed within another list.
+
+```{r}
+scotland <- list(
+  captial = "Edinburgh",
+  population = 5447000,
+  devolved = TRUE
+)
+
+wales <- list(
+  capital = "Cardiff",
+  population = 3132700,
+  devolved = TRUE
+)
+
+northern_ireland <- list(
+  capital = "Belfast",
+  population = 1910500,
+  devolved = TRUE
+)
+
+uk <- list(
+  England = england, 
+  Scotland = scotland, 
+  Wales = wales, 
+  "Northern Ireland" = northern_ireland
+  )
+
+str(uk)
+```
+
+### Matrix and Arrays
+
+Matrices are two-dimensional and arrays are multi-dimensional, homogeneous data structures. All elements in a matrix or array must be of the same type. Will not be used much in this series.
+
+```{r}
+# Example of a matix
+X <- matrix(1:10, nrow = 2)
+X
+
+# Example of an array
+Y <- array(1:12, dim = c(2, 2, 3))
+Y
+```
+
+### Dataframes
+
+Data frames are one of the most commonly used data structures in R for storing tabular data. Similar to matrices above, they consist of columns and rows of data. Unlike matrices, data different across columns. Data must be of the same type within column though.
+
+Converting the UK data above 
+
+```{r}
+countries <- c("England", "Scotland", "Wales", "Northern Ireland")
+capital <- c("London", "Edinburgh", "Cardiff", "Belfast")
+population <- c(57112500, 5447000, 3132700, 1910500)
+devolved <- c(FALSE, TRUE, TRUE, TRUE)
+
+uk_df <- data.frame(countries, capital, population, devolved)
+uk_df
+```
+
+## Functions
+
+Functions in R are a fundamental part of programming in the language. They allow you to encapsulate code into reusable blocks, making your scripts more modular and easier to maintain.
+
+```{r}
+discount_factor <- function(year, r = 0.035) {
+  dis_fct <- 1 / (1 + r)^year
+  return(dis_fct)
+}
+```
+
+## Packages
+
+Packages in R are collections of functions, data, and compiled code that extend the capabilities of R. They are generally created for specialised tasks.
+
+Packages are available to download from a number of sources, with [CRAN](https://cran.r-project.org/web/packages/available_packages_by_name.html) being the main repository for packages. Currently there are **22,416** packages available on CRAN.
+
+The `install.packages()` command is used to install a package from CRAN.
+
+``` r
+# Install tidyverse
+install.packages("tidyverse")
+```
+Once installed, a package needs to be loaded to be able to use the functions and data of the package. This done by using the `library()` command.
+
+### The tidyverse
+
+The [**tidyverse**](https://www.tidyverse.org/) is a collection of R packages that are designed to make data analysis in R easier and more consistent. It includes packages for data manipulation, visualization, and more..
+
+The tidyverse made up of nine core packages which are loaded when `library(tidyverse)` is called, with each package specialising in an area of data analysis/data science.
+
+-   [**readr**](https://readr.tidyverse.org/) for reading rectangular data (CSV, TSV, txt files).
+-   [**dplyr**](https://dplyr.tidyverse.org/) provides a grammar of data manipulation through set of "verbs".
+-   [**tidyr**](https://tidyr.tidyverse.org/) to create tidy data.
+-   [**ggplot2**](https://ggplot2.tidyverse.org/) used for plotting data using the grammar of graphics.
+-   [**purrr**](https://purrr.tidyverse.org/)
+-   [**stringr**](https://stringr.tidyverse.org/)
+-   [**lubridate**](https://lubridate.tidyverse.org/)
+-   [**forcats**](https://forcats.tidyverse.org/) used to deal with factor objects.
+-   [**tibble**](https://tibble.tidyverse.org/)
+
+The advantage of tidyverse packages is that they share a design philosophy, common grammar and data structures.
+
+## Importing Data - CSV
+
+CSV (Comma-separated values) files are widely used for data storage and exchange due to their simplicity and compatibility with various software applications. Therefore importing data from CSV is important skill. 
+
+Within R, there is the `read.csv()` function. However, we will look at the `read_csv()` function from the {readr} package installed with the tidyverse, as it provides a number of advantages. 
+
+```{r}
+library(readr)
+
+cereals_df <- read_csv("data/cereals.csv")
+tail(cereals_df)
+```
+
+What if my data is across a number of CSVs? `read_csv()` allows data to be read from multiple files once it is in the same format across the different CSV files. 
+
+```{r}
+files <- list.files("data/wine-imports/", full.names = TRUE)
+
+wine_imports_df <- read_csv(files)
+head(wine_imports_df)
+```
+
+
