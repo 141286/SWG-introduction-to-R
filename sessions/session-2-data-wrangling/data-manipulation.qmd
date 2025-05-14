@@ -1,0 +1,486 @@
+---
+title: "Session 2: Data Manipulation"
+date: today
+date-format: D MMMM YYYY
+fontsize: "11"
+format:
+  html:
+    code-line-numbers: true
+    highlight-style: a11y
+    theme:
+      light: flatly
+      dark: darkly
+    embed-resources: true
+    toc: true
+    toc-depth: 2
+---
+
+```{r}
+#| label: set-options
+#| include: false
+
+options(pillar.print_max = 5, tibble.print_max = 5, tibble.print_min = 5)
+```
+
+### This session will cover:
+
+-   Using `{dplyr}` for data manipulation
+-   Filtering, selecting, and arranging data
+-   Creating new variables
+-   Summarizing data
+-   Reading data from Excel
+
+## Setup
+
+```{r}
+#| label: load-packages
+#| warning: false
+#| message: false
+
+# load packages
+library(readr)
+library(dplyr)
+```
+
+We will use the same data as we used in last week's session. To begin with, we will read in the cereals dataset.
+
+```{r}
+#| label: read-data-cereals
+#| warning: false
+#| message: false
+
+# read cereals data.frame
+cereals_df <- read_csv("data/cereals.csv", show_col_types = FALSE)
+head(cereals_df)
+```
+
+You will notice that some of the column names have spaces within them. Whilst it is perfectly possible to use a dataframe with spaces in the column names, it is generally best practice to remove these spaces.
+
+This can be achieved by a number of methods. Conveniently the `read_csv()` function contains an argument, `name_repair`, that allows the column names to be cleaned by a function. 
+
+The [`{janitor}`](https://sfirke.github.io/janitor/index.html) package contains a function `make_clean_names()` that will automatically convert column names to a consistent format, removing spaces and making them easier to work with in R. `{janitor}` does not come in the [`{tidyverse}`](https://www.tidyverse.org/); therefore, you might need to install it via `install.packages("janitor")` if it is not already installed.
+
+```{r}
+#| label: read-data-cereals-clean-names
+#| warning: false
+#| message: false
+
+# install.packages("janitor")
+
+# load janitor package
+library(janitor) # Used for cleaning data.frame names
+
+# read data with names cleaned by the janitor `make_clean_names` function
+cereals_df <- read_csv(
+    "data/cereals.csv",
+    name_repair = make_clean_names,
+    show_col_types = FALSE
+)
+tail(cereals_df)
+```
+
+## More on dataframes
+
+DataFrames in R are a fundamental data structure used for storing data tables. They are similar to spreadsheets or SQL tables and are widely used for data analysis and manipulation.
+
+#### Key Features of DataFrames in R:
+
+- **Two-dimensional:** Rows and columns.
+- **Columns can be of different types:** numeric, character, factor, *etc.*
+- **Each column is a vector:** All elements in a column must be of the same type.
+
+
+Some useful functions to explore the dataframe are:
+
+```{r}
+#| label: exploring-dataframe
+
+# structure of the dataframe
+str(cereals_df)
+
+# summary statistics of the dataframe
+summary(cereals_df)
+
+# column names
+names(cereals_df)
+
+# dimensions of the dataframe
+# nrow(cereals_df)
+# ncol(cereals_df)
+dim(cereals_df)
+```
+
+
+There also a number of ways access data from a dataframe
+
+```{r}
+# accessing a column to a vector- two methods
+
+cereals_df$wheat
+cereals_df[["oats"]]
+```
+
+
+```{r}
+# accessing data by index
+
+# first row
+cereals_df[1, ]
+# second column
+cereals_df[ , 2]
+# first and fifth row - second and third column
+cereals_df[c(1,5), 2:3]
+```
+
+Data can also be modified. 
+
+```{r}
+# modifying data
+
+# Creating a new variable to indicate if it is the 20th century
+cereals_df$century_20th <- cereals_df$year > 1900 & cereals_df$year < 2000
+
+# I made a mistake as it should have been >= 1900. 
+# modifying a specific value
+cereals_df$century_20th[16] <- TRUE  # can also be cereals_df[16, 9] <- TRUE
+cereals_df[13:19,]
+```
+
+Whilst it is good to know these native (base R) expressions on how to manipulate dataframes the syntax can be confusing and hard to read for a newcomer. Therefore we will make use of the `{dplyr}` package to make our analysis easier. 
+
+
+## `{dplyr}` package
+
+![](images/dplyr.png){fig-align="center"}
+
+The [`{dplyr}`](https://dplyr.tidyverse.org/) package focuses on data manipulation, where "dplyr verbs" (functions) are utilised to preform these manipulations. The main `{dplyr}` verbs include:
+
+-   `select()` for selecting columns
+-   `filter()` for filtering rows based on one or more conditions
+-   `mutate()` for creating new columns
+-   `summarise()` for summarising dataframes
+
+As with all `{tidyverse}` packages, `{dplyr}` provides consistent data input/output structures. The first input is a dataframe and the output is dataframe. Because of this, it works with the pipe operator `|>` where multiple verbs can be combined.
+
+## `{dplyr}` Manipulating Rows
+
+### Filtering rows
+
+Filtering is based on certain rows satisfying a condition. The `filter()` is used to carry out this task.
+
+```{r}
+#| label: filter-examples-1
+
+# filter for rows for years from 2000 onwards
+filter(cereals_df, year >= 2000)
+```
+
+More than one condition can be applied to the filter.
+
+```{r}
+#| label: filter-examples-2
+
+# filter for rows where wheat yield is above 7 t/ha AND oats yield is above 6 t/ha
+filter(cereals_df, wheat > 7, oats > 6)
+```
+
+### Slicing rows
+
+Slicing is another sub-setting method allowing for selections based on position of rows.
+
+```{r}
+#| label: slicing-example-1
+
+# get rows number 100 to 104
+slice(cereals_df, 100:104)
+```
+
+There are a number of slice variants that allow for more refined slicing, such as head/tail slicing or min/max slicing.
+
+```{r}
+#| label: slicing-example-2
+
+# get the top 5 years of yield for wheat
+slice_max(cereals_df, order_by = wheat, n = 5)
+```
+
+You can also slice by proportion of rows, rather than number of rows.
+
+```{r}
+# get the bottom 10% of yield for wheat
+slice_min(cereals_df, order_by = wheat, prop = 0.1)
+```
+
+### Arranging rows
+
+It is possible to sort a dataframe through the `arrange()` function. By default, this sort is by ascending order.
+
+```{r}
+arrange(cereals_df, wheat)
+```
+
+It is also possible to arrange by more than one variable.
+
+```{r}
+# Arrange by wheat and year in descending order
+arrange(cereals_df, desc(wheat), desc(year))
+```
+
+## `{dplyr}` Manipulating Columns
+
+### Selecting columns
+
+Many times you are only interested in a number of columns of dataframe. 
+
+```{r}
+#| label: select-example-1
+
+# select columns year, wheat, barley and oilseed_rape
+select(cereals_df, year, wheat, barley, oilseed_rape)
+```
+
+Sometimes, you might be interested in all the columns between two columns. The `:` operator can be used in this case, reducing the number of arguments.
+
+```{r}
+#| label: select-example-2
+
+# selecting same columns using the : operator to select all columns between year and barley
+select(cereals_df, year:barley, oilseed_rape)
+```
+
+
+### Manipulating Columns - Creating columns
+
+We have see already how a new column can be added to a dataframe through base R method. `mutate()` is the verb to do this with `{dplyr}`. 
+
+```{r}
+#| label: mutate-example-1
+
+# create a yield per acre for wheat column
+mutate(cereals_df, wheat_per_acre = wheat / 2.47105)
+```
+
+Multible variables be created at the same time too.
+
+```{r}
+#| label: mutate-example-2
+
+# create a yield per acre for wheat and oats columns
+mutate(cereals_df, 
+       wheat_per_acre = wheat / 2.47105,
+       oats_per_acre = oats / 2.47105
+       )
+```
+
+```{r}
+#| label: mutate-example-3
+
+# replace yield per acre for wheat and oats columns
+mutate(cereals_df, 
+       wheat = wheat / 2.47105,
+       oats = oats / 2.47105
+       )
+```
+
+::: callout-warn
+In `mutate()`, if a variable is modified or replaced, any subsequent references to that variable within the same `mutate()` call will use the updated value.
+:::
+
+## The pipe operator `|>`
+
+What happens if we want to combine a number of verbs together? Two different approaches would be stepwise and nested.
+
+```{r}
+#| label: no-pipe-example
+
+# intermediate steps 
+# step 1: select only years wheat, barley and oilseed rape
+cereals_reduced_df <- select(cereals_df, year, wheat, barley, oilseed_rape)
+# step 2: filter for years from 2000
+cereals_filtered_df <- filter(cereals_reduced_df, year >= 2000)
+# step 3: change the yield to per acre
+cereals_acre_df <- mutate(cereals_filtered_df, 
+                          wheat = wheat / 2.47105,
+                          barley = barley / 2.47105,
+                          oilseed_rape = oilseed_rape / 2.47105)
+cereals_acre_df
+
+# nested 
+mutate(filter(select(cereals_df, year, wheat, barley, oilseed_rape), year >= 2000),wheat = wheat / 2.47105, barley = barley / 2.47105, oilseed_rape = oilseed_rape / 2.47105)
+```
+
+Obviously both of these two approaches have drawbacks, as writing each step separately can be verbose, while nesting functions can quickly become unreadable.
+
+In R, there is a pipe operator `|>`  which offers a much cleaner, more readable, and more intuitive way to chain together multiple data transformation steps.
+
+The pipe takes the result from one function and allows it to be passed into another function as the first argument. In mathematical terms $f(x, y)$ becomes $x |> f(y)$.
+
+Applying the pipe operator to the example above:
+
+```{r}
+#| label: pipe-example
+
+cereals_df |> 
+  # step 1: select only years wheat, barley and oilseed rape
+  select(year:barley, oilseed_rape) |> 
+  # step 2: filter for years from 2000
+  filter(year >= 2000) |> 
+  # step 3: change the yield to per acre
+  mutate(
+    wheat = wheat / 2.47105,
+    barley = barley / 2.47105,
+    oilseed_rape = oilseed_rape / 2.47105
+  )
+```
+ 
+#### Benefits of Using Pipes
+
+- **Improved readability:** Each transformation is clearly separated and easy to follow.
+- **Less nesting:** Avoids deeply nested function calls.
+- **Easier debugging:** You can run each step independently to inspect intermediate results.
+
+
+::: callout-note
+In older code, you might notice the `{magrittr}` pipe `%>%`.
+
+This has almost the same behaviour as the native pipe operator `|>` and the native pipe should be used.
+:::
+
+
+## `{dplyr}` Summarising Data
+
+The `summarise()` function allows for summary functions be applied to dataframe. 
+
+```{r}
+# summarise the average yield for wheat and oats
+cereals_df |> 
+  summarise(
+    wheat = mean(wheat),
+    oats = mean(oats)
+  )
+```
+
+Why is oats `NA`? In a lot of summary functions like in R `sum()`, `mean()`, `max()`, `min()` *etc.*, if an `NA` is present the default behaviour is to not ignore the `NA` and the result will be `NA`. These behaviour can be changed by setting the `na.rm` argument to `TRUE`.
+
+```{r}
+
+# summarise the average yield for wheat and oats
+cereals_df |> 
+  summarise(
+    wheat = mean(wheat),
+    oats = mean(oats, na.rm = TRUE)
+  )
+```
+
+As there are a different number of observations per cereal type, it maybe good to record this too. 
+
+For a full column like wheat, the `n()` does this job for us. However for oats, we want to count all the times that oats is not `NA`.
+
+```{r}
+
+# summarise the average yield for wheat and oats
+cereals_df |> 
+  summarise(
+    wheat_n = n(),
+    wheat = mean(wheat),
+    oats_n = sum(!is.na(oats)),
+    oats = mean(oats, na.rm = TRUE),
+  )
+```
+
+It is also possible to get these results by different groups if present in the data. 
+
+Say we wanted to find out the above information, but differentiate between the period until WWII and afterwards. This can be done two ways, through use of the `.by` argument in `summarise()`:
+
+```{r}
+
+# summarise the average yield for wheat and oats in 20th century, differentiating after WWII
+cereals_df |> 
+  filter(century_20th) |> 
+  mutate(post_www2 = if_else(year > 1945, "yes", "no")) |> 
+  summarise(
+    wheat_n = n(),
+    wheat = mean(wheat),
+    oats_n = sum(!is.na(oats)),
+    oats = mean(oats, na.rm = TRUE),
+    .by = post_www2
+  )
+```
+
+Or by passing the dataframe through the `group_by()` function before `summarise()`. 
+
+```{r}
+#| label: Use 
+cereals_df |> 
+  filter(century_20th) |> 
+  mutate(post_www2 = if_else(year > 1945, "yes", "no")) |> 
+  group_by(post_www2) |> 
+  summarise(
+    wheat_n = n(),
+    wheat = mean(wheat),
+    oats_n = sum(!is.na(oats)),
+    oats = mean(oats, na.rm = TRUE)
+  ) |> 
+  ungroup()
+```
+
+Whilst these two approaches give us the same results, there is subtle differences in what is happening. 
+
+## Importing Data - Excel
+
+Excel is a very common way of how data are stored and disseminated. We will use the `{readxl}` to read in data from spreadsheet, however other packages are also available such as [`{openxlsx2}`](https://janmarvin.github.io/openxlsx2/).
+
+```{r}
+#| label: read-excel-first-try
+#| message: false
+
+# load readxl library
+library(readxl)
+
+read_excel("data/May_2025_Over_10m_vessel_list.xlsx")
+```
+
+You will notice that data read in is not exactly what we want. The title on the top row is being read as are the blank lines below it. 
+
+```{r}
+read_excel("data/May_2025_Over_10m_vessel_list.xlsx", skip = 4)
+```
+
+This is better, as now the right data is being captured.
+
+You will notice that the the Excel document has three worksheets, but we didn't specify which worksheet when reading in the data. The default is read from the first worksheet, but we can read from the other worksheets by specifying its number or name. It is good practice to specify the sheet regardless
+
+Additionally, the column names are not in a consistent format, therefore the use of the `{janitor}`'s `make_clean_names` can be again used to fix this.
+
+```{r}
+vessels_df <- read_excel("data/May_2025_Over_10m_vessel_list.xlsx",
+                         sheet = "Over_10_metres",
+                         skip = 4,
+                         .name_repair = make_clean_names)
+vessels_df
+```
+
+::: callout-note
+Unlike `read_csv()` multiple files cannot be read in one go for `read_excel()`.
+:::
+
+Sometimes you are only interested in reading in data from a certain range of cells. This can also be done.
+
+In the **Notes** worksheet, there is a small table of *hull material codes*, cells A4:B10.
+
+```{r}
+#| label: read-excel-range-data
+
+# read data from cells A5:B10
+hull_codes_df <- read_excel("data/May_2025_Over_10m_vessel_list.xlsx", sheet = "Notes", range = "A5:B10", col_names = c("code", "description"))
+hull_codes_df
+```
+
+## Problem Set
+
+Using the different techniques we encountered today to:
+
+1.  produce the 3 tables in the **Summary** worksheet (do no need include grand total)
+2.  find the names of the 10 oldest vessels
+3.  find all the vessels where the country of construction is unknown
+4.  calculate the average of the vessels registered tonnage by port
