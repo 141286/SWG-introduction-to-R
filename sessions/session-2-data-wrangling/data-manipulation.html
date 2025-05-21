@@ -3257,6 +3257,12 @@ window.Quarto = {
     </div>
   </div>
   
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">21 May 2025</p>
+    </div>
+  </div>
     
   </div>
   
@@ -3300,25 +3306,20 @@ window.Quarto = {
 </div>
 </div>
 <p>You will notice that some of the column names have spaces within them. Whilst it is perfectly possible to use a dataframe with spaces in the column names, it is generally best practice to remove these spaces.</p>
-<<<<<<< HEAD
 <p>This can be achieved by a number of methods. Conveniently the <code>read_csv()</code> function contains an argument, <code>name_repair</code>, that allows the column names to be cleaned by a function.</p>
-=======
-<p>This can be achieved by a number of methods; however, the <code>read_csv()</code> function contains an argument, <code>name_repair</code>, that allows the column names to be cleaned by a function.</p>
->>>>>>> c1d64585853324d700c9ca94224683c53806a654
 <p>The <a href="https://sfirke.github.io/janitor/index.html"><code>{janitor}</code></a> package contains a function <code>make_clean_names()</code> that will automatically convert column names to a consistent format, removing spaces and making them easier to work with in R. <code>{janitor}</code> does not come in the <a href="https://www.tidyverse.org/"><code>{tidyverse}</code></a>; therefore, you might need to install it via <code>install.packages(&quot;janitor&quot;)</code> if it is not already installed.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co"># install.packages(&quot;janitor&quot;)</span></span>
 <span id="cb4-2"><a href="#cb4-2"></a></span>
 <span id="cb4-3"><a href="#cb4-3"></a><span class="co"># load janitor package</span></span>
-<span id="cb4-4"><a href="#cb4-4"></a><span class="fu">library</span>(janitor) <span class="co"># Used for cleaning data.frame names</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="fu">library</span>(janitor) </span>
 <span id="cb4-5"><a href="#cb4-5"></a></span>
 <span id="cb4-6"><a href="#cb4-6"></a><span class="co"># read data with names cleaned by the janitor `make_clean_names` function</span></span>
 <span id="cb4-7"><a href="#cb4-7"></a>cereals_df <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
 <span id="cb4-8"><a href="#cb4-8"></a>    <span class="st">&quot;data/cereals.csv&quot;</span>,</span>
-<span id="cb4-9"><a href="#cb4-9"></a>    <span class="at">name_repair =</span> make_clean_names,</span>
-<span id="cb4-10"><a href="#cb4-10"></a>    <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
-<span id="cb4-11"><a href="#cb4-11"></a>)</span>
-<span id="cb4-12"><a href="#cb4-12"></a><span class="fu">tail</span>(cereals_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-9"><a href="#cb4-9"></a>    <span class="at">name_repair =</span> make_clean_names</span>
+<span id="cb4-10"><a href="#cb4-10"></a>)</span>
+<span id="cb4-11"><a href="#cb4-11"></a><span class="fu">tail</span>(cereals_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 6 × 8
    year wheat barley  oats   rye mixed_corn triticale oilseed_rape
@@ -3594,16 +3595,16 @@ window.Quarto = {
 <h3 class="anchored" data-anchor-id="arranging-rows">Arranging rows</h3>
 <p>It is possible to sort a dataframe through the <code>arrange()</code> function. By default, this sort is by ascending order.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1"></a><span class="fu">arrange</span>(cereals_df, wheat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1"></a><span class="fu">arrange</span>(cereals_df, <span class="fu">desc</span>(wheat))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 139 × 9
    year wheat barley  oats   rye mixed_corn triticale oilseed_rape century_20th
   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt; &lt;lgl&gt;       
-1  1886     2     NA    NA    NA         NA        NA           NA FALSE       
-2  1892     2     NA    NA    NA         NA        NA           NA FALSE       
-3  1893     2     NA    NA    NA         NA        NA           NA FALSE       
-4  1895     2     NA    NA    NA         NA        NA           NA FALSE       
-5  1904     2     NA    NA    NA         NA        NA           NA TRUE        
+1  2015   9      6.7   6.1   2.6        5         4.8          3.9 FALSE       
+2  2019   8.9    6.9   5.9  NA         NA        NA            3.3 FALSE       
+3  2014   8.6    6.4   6     5.7        4.7       4.6          3.6 FALSE       
+4  2022   8.6    6.6   5.7  NA         NA        NA            3.7 FALSE       
+5  2008   8.3    6     5.8   6.1        4.4       4.4          3.3 FALSE       
 # ℹ 134 more rows</code></pre>
 </div>
 </div>
@@ -3705,10 +3706,11 @@ window.Quarto = {
 <div class="sourceCode cell-code" id="cb48"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1"></a><span class="co"># replace yield per acre for wheat and oats columns</span></span>
 <span id="cb48-2"><a href="#cb48-2"></a><span class="fu">mutate</span>(cereals_df, </span>
 <span id="cb48-3"><a href="#cb48-3"></a>       <span class="at">wheat =</span> wheat <span class="sc">/</span> <span class="fl">2.47105</span>,</span>
-<span id="cb48-4"><a href="#cb48-4"></a>       <span class="at">oats =</span> oats <span class="sc">/</span> <span class="fl">2.47105</span></span>
-<span id="cb48-5"><a href="#cb48-5"></a>       )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb48-4"><a href="#cb48-4"></a>       <span class="at">oats =</span> oats <span class="sc">/</span> <span class="fl">2.47105</span>,</span>
+<span id="cb48-5"><a href="#cb48-5"></a>       <span class="at">wheat_doubled =</span> wheat <span class="sc">*</span> <span class="dv">2</span></span>
+<span id="cb48-6"><a href="#cb48-6"></a>       )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 139 × 9
+<pre><code># A tibble: 139 × 10
    year wheat barley  oats   rye mixed_corn triticale oilseed_rape century_20th
   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt; &lt;lgl&gt;       
 1  1885 0.971     NA    NA    NA         NA        NA           NA FALSE       
@@ -3716,7 +3718,8 @@ window.Quarto = {
 3  1887 0.971     NA    NA    NA         NA        NA           NA FALSE       
 4  1888 0.850     NA    NA    NA         NA        NA           NA FALSE       
 5  1889 0.931     NA    NA    NA         NA        NA           NA FALSE       
-# ℹ 134 more rows</code></pre>
+# ℹ 134 more rows
+# ℹ 1 more variable: wheat_doubled &lt;dbl&gt;</code></pre>
 </div>
 </div>
 <div class="callout-warn">
@@ -3832,11 +3835,7 @@ Note
 1  4.35    NA</code></pre>
 </div>
 </div>
-<<<<<<< HEAD
 <p>Why is oats <code>NA</code>? In a lot of summary functions like in R <code>sum()</code>, <code>mean()</code>, <code>max()</code>, <code>min()</code> <em>etc.</em>, if an <code>NA</code> is present the default behaviour is to not ignore the <code>NA</code> and the result will be <code>NA</code>. These behaviour can be changed by setting the <code>na.rm</code> argument to <code>TRUE</code>.</p>
-=======
-<p>Why is oats NA? In a lot of summary functions like in R <code>sum()</code>, <code>mean()</code>, <code>max()</code>, <code>min()</code> <em>etc.</em>, if an <code>NA</code> is present the default behaviour is to not ignore the <code>NA</code> and the result will be <code>NA</code>. These behaviour can be changed by setting the <code>na.rm</code> argument to <code>TRUE</code>.</p>
->>>>>>> c1d64585853324d700c9ca94224683c53806a654
 <div class="cell">
 <div class="sourceCode cell-code" id="cb58"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1"></a><span class="co"># summarise the average yield for wheat and oats</span></span>
 <span id="cb58-2"><a href="#cb58-2"></a>cereals_df <span class="sc">|&gt;</span> </span>
@@ -3851,12 +3850,8 @@ Note
 1  4.35  5.36</code></pre>
 </div>
 </div>
-<<<<<<< HEAD
 <p>As there are a different number of observations per cereal type, it maybe good to record this too.</p>
 <p>For a full column like wheat, the <code>n()</code> does this job for us. However for oats, we want to count all the times that oats is not <code>NA</code>.</p>
-=======
-<p>As there are a different number of observations per cereal type, it maybe good to record this too. For a full column like wheat, the <code>n()</code> does this job for us. However for oats, we want to count all the times that oats is not <code>NA</code>.</p>
->>>>>>> c1d64585853324d700c9ca94224683c53806a654
 <div class="cell">
 <div class="sourceCode cell-code" id="cb60"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1"></a><span class="co"># summarise the average yield for wheat and oats</span></span>
 <span id="cb60-2"><a href="#cb60-2"></a>cereals_df <span class="sc">|&gt;</span> </span>
@@ -3873,7 +3868,6 @@ Note
 1     139  4.35     44  5.36</code></pre>
 </div>
 </div>
-<<<<<<< HEAD
 <p>It is also possible to get these results by different groups if present in the data.</p>
 <p>Say we wanted to find out the above information, but differentiate between the period until WWII and afterwards. This can be done two ways, through use of the <code>.by</code> argument in <code>summarise()</code>:</p>
 <div class="cell">
@@ -3918,24 +3912,15 @@ Note
 </div>
 </div>
 <p>Whilst these two approaches give us the same results, there is subtle differences in what is happening.</p>
-=======
->>>>>>> c1d64585853324d700c9ca94224683c53806a654
 </section>
 <section id="importing-data---excel" class="level2">
 <h2 class="anchored" data-anchor-id="importing-data---excel">Importing Data - Excel</h2>
 <p>Excel is a very common way of how data are stored and disseminated. We will use the <code>{readxl}</code> to read in data from spreadsheet, however other packages are also available such as <a href="https://janmarvin.github.io/openxlsx2/"><code>{openxlsx2}</code></a>.</p>
 <div class="cell">
-<<<<<<< HEAD
 <div class="sourceCode cell-code" id="cb66"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1"></a><span class="co"># load readxl library</span></span>
 <span id="cb66-2"><a href="#cb66-2"></a><span class="fu">library</span>(readxl)</span>
 <span id="cb66-3"><a href="#cb66-3"></a></span>
 <span id="cb66-4"><a href="#cb66-4"></a><span class="fu">read_excel</span>(<span class="st">&quot;data/May_2025_Over_10m_vessel_list.xlsx&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-=======
-<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1"></a><span class="co"># load readxl library</span></span>
-<span id="cb62-2"><a href="#cb62-2"></a><span class="fu">library</span>(readxl)</span>
-<span id="cb62-3"><a href="#cb62-3"></a></span>
-<span id="cb62-4"><a href="#cb62-4"></a><span class="fu">read_excel</span>(<span class="st">&quot;data/May_2025_Over_10m_vessel_list.xlsx&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
->>>>>>> c1d64585853324d700c9ca94224683c53806a654
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1,043 × 18
   The United Kingdom fishing v…¹ ...2  ...3  ...4  ...5  ...6  ...7  ...8  ...9 
@@ -3956,11 +3941,7 @@ Note
 </div>
 <p>You will notice that data read in is not exactly what we want. The title on the top row is being read as are the blank lines below it.</p>
 <div class="cell">
-<<<<<<< HEAD
 <div class="sourceCode cell-code" id="cb68"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1"></a><span class="fu">read_excel</span>(<span class="st">&quot;data/May_2025_Over_10m_vessel_list.xlsx&quot;</span>, <span class="at">skip =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-=======
-<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1"></a><span class="fu">read_excel</span>(<span class="st">&quot;data/May_2025_Over_10m_vessel_list.xlsx&quot;</span>, <span class="at">skip =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
->>>>>>> c1d64585853324d700c9ca94224683c53806a654
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1,039 × 18
   `Administrative port` `Administrative country` `Home port`
@@ -3983,19 +3964,11 @@ Note
 <p>You will notice that the the Excel document has three worksheets, but we didn’t specify which worksheet when reading in the data. The default is read from the first worksheet, but we can read from the other worksheets by specifying its number or name. It is good practice to specify the sheet regardless</p>
 <p>Additionally, the column names are not in a consistent format, therefore the use of the <code>{janitor}</code>’s <code>make_clean_names</code> can be again used to fix this.</p>
 <div class="cell">
-<<<<<<< HEAD
 <div class="sourceCode cell-code" id="cb70"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1"></a>vessels_df <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">&quot;data/May_2025_Over_10m_vessel_list.xlsx&quot;</span>,</span>
 <span id="cb70-2"><a href="#cb70-2"></a>                         <span class="at">sheet =</span> <span class="st">&quot;Over_10_metres&quot;</span>,</span>
 <span id="cb70-3"><a href="#cb70-3"></a>                         <span class="at">skip =</span> <span class="dv">4</span>,</span>
 <span id="cb70-4"><a href="#cb70-4"></a>                         <span class="at">.name_repair =</span> make_clean_names)</span>
 <span id="cb70-5"><a href="#cb70-5"></a>vessels_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-=======
-<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1"></a>vessels_df <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">&quot;data/May_2025_Over_10m_vessel_list.xlsx&quot;</span>,</span>
-<span id="cb66-2"><a href="#cb66-2"></a>                         <span class="at">sheet =</span> <span class="st">&quot;Over_10_metres&quot;</span>,</span>
-<span id="cb66-3"><a href="#cb66-3"></a>                         <span class="at">skip =</span> <span class="dv">4</span>,</span>
-<span id="cb66-4"><a href="#cb66-4"></a>                         <span class="at">.name_repair =</span> make_clean_names)</span>
-<span id="cb66-5"><a href="#cb66-5"></a>vessels_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
->>>>>>> c1d64585853324d700c9ca94224683c53806a654
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1,039 × 18
   administrative_port administrative_country home_port port_letters_and_numbers
@@ -4030,15 +4003,9 @@ Note
 <p>Sometimes you are only interested in reading in data from a certain range of cells. This can also be done.</p>
 <p>In the <strong>Notes</strong> worksheet, there is a small table of <em>hull material codes</em>, cells A4:B10.</p>
 <div class="cell">
-<<<<<<< HEAD
 <div class="sourceCode cell-code" id="cb72"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1"></a><span class="co"># read data from cells A5:B10</span></span>
 <span id="cb72-2"><a href="#cb72-2"></a>hull_codes_df <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">&quot;data/May_2025_Over_10m_vessel_list.xlsx&quot;</span>, <span class="at">sheet =</span> <span class="st">&quot;Notes&quot;</span>, <span class="at">range =</span> <span class="st">&quot;A5:B10&quot;</span>, <span class="at">col_names =</span> <span class="fu">c</span>(<span class="st">&quot;code&quot;</span>, <span class="st">&quot;description&quot;</span>))</span>
 <span id="cb72-3"><a href="#cb72-3"></a>hull_codes_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-=======
-<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1"></a><span class="co"># read data from cells A5:B10</span></span>
-<span id="cb68-2"><a href="#cb68-2"></a>hull_codes_df <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">&quot;data/May_2025_Over_10m_vessel_list.xlsx&quot;</span>, <span class="at">sheet =</span> <span class="st">&quot;Notes&quot;</span>, <span class="at">range =</span> <span class="st">&quot;A5:B10&quot;</span>, <span class="at">col_names =</span> <span class="fu">c</span>(<span class="st">&quot;code&quot;</span>, <span class="st">&quot;description&quot;</span>))</span>
-<span id="cb68-3"><a href="#cb68-3"></a>hull_codes_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
->>>>>>> c1d64585853324d700c9ca94224683c53806a654
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 6 × 2
   code  description
