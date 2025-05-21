@@ -1,7 +1,8 @@
 ---
 title: "Session 2: Data Manipulation"
-date: today
+date: "2025-05-14"
 date-format: D MMMM YYYY
+date-modified: today
 fontsize: "11"
 format:
   html:
@@ -68,13 +69,12 @@ The [`{janitor}`](https://sfirke.github.io/janitor/index.html) package contains 
 # install.packages("janitor")
 
 # load janitor package
-library(janitor) # Used for cleaning data.frame names
+library(janitor) 
 
 # read data with names cleaned by the janitor `make_clean_names` function
 cereals_df <- read_csv(
     "data/cereals.csv",
-    name_repair = make_clean_names,
-    show_col_types = FALSE
+    name_repair = make_clean_names
 )
 tail(cereals_df)
 ```
@@ -216,7 +216,7 @@ slice_min(cereals_df, order_by = wheat, prop = 0.1)
 It is possible to sort a dataframe through the `arrange()` function. By default, this sort is by ascending order.
 
 ```{r}
-arrange(cereals_df, wheat)
+arrange(cereals_df, desc(wheat))
 ```
 
 It is also possible to arrange by more than one variable.
@@ -278,7 +278,8 @@ mutate(cereals_df,
 # replace yield per acre for wheat and oats columns
 mutate(cereals_df, 
        wheat = wheat / 2.47105,
-       oats = oats / 2.47105
+       oats = oats / 2.47105,
+       wheat_doubled = wheat * 2
        )
 ```
 
@@ -360,7 +361,9 @@ cereals_df |>
   )
 ```
 
+
 Why is oats `NA`? In a lot of summary functions like in R `sum()`, `mean()`, `max()`, `min()` *etc.*, if an `NA` is present the default behaviour is to not ignore the `NA` and the result will be `NA`. These behaviour can be changed by setting the `na.rm` argument to `TRUE`.
+
 
 ```{r}
 
@@ -372,9 +375,11 @@ cereals_df |>
   )
 ```
 
+
 As there are a different number of observations per cereal type, it maybe good to record this too. 
 
 For a full column like wheat, the `n()` does this job for us. However for oats, we want to count all the times that oats is not `NA`.
+
 
 ```{r}
 
@@ -387,6 +392,7 @@ cereals_df |>
     oats = mean(oats, na.rm = TRUE),
   )
 ```
+
 
 It is also possible to get these results by different groups if present in the data. 
 
@@ -425,6 +431,7 @@ cereals_df |>
 ```
 
 Whilst these two approaches give us the same results, there is subtle differences in what is happening. 
+
 
 ## Importing Data - Excel
 

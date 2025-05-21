@@ -1,0 +1,311 @@
+---
+title: "Session 3: Data Tidying"
+date: "2025-05-21"
+date-format: D MMMM YYYY
+date-modified: today
+fontsize: "11"
+format:
+  html:
+    code-line-numbers: true
+    highlight-style: a11y
+    theme:
+      light: flatly
+      dark: darkly
+    embed-resources: true
+    toc: true
+    toc-depth: 2
+---
+
+```{r}
+#| label: set-options
+#| include: false
+
+options(pillar.print_max = 5, tibble.print_max = 5, tibble.print_min = 5)
+```
+
+### This session will cover:
+
+-   Introduction to the {tidyr} package
+-   Handling missing values
+-   Reshaping data by pivoting
+-   Combining and splitting columns
+-   Nesting data
+-   Reading data from JSON
+
+## Setup
+
+```{r}
+#| label: load-packages
+#| warning: false
+#| message: false
+
+# load packages
+library(dplyr)
+library(janitor)
+library(readr)
+library(tidyr)
+```
+
+We will use the same data as we used in last week's session. To begin with, we will read in the cereals dataset.
+
+```{r}
+#| label: read-data-cereals
+#| warning: false
+#| message: false
+
+# read cereals data.frame
+cereals_df <- read_csv("data/cereals.csv", name_repair = make_clean_names)
+cereals_df
+```
+
+## `{tidyr}` Package
+
+![](images/tidyr.png)
+
+The [`{tidyr}`](https://tidyr.tidyverse.org/index.html) package from the tidyverse is a small but powerful package. Its primary focus is on creating [**tidy data**](https://tidyr.tidyverse.org/articles/tidy-data.html).
+
+### What is tidy data?
+
+Tidy data is a structured way of organising tabular data where:
+
+-   each variable is a column
+-   each observation is a row
+-   each value is a cell
+
+
+![Source: R for Data Science (1st Edition) by Hadley Wickham and Garrett Grolemund](images/tidy-data.png)
+
+The concept of tidy data is foundational principle of the tidyverse.
+
+## Dealing with Missing Values
+
+Missing values (`NA`) are a common occurrence with data, with a number of different ways of dealing with missing values depending on the situation. Three of of the most common methods are:
+
+-   remove observations
+-   replace the observation's missing value with a predefined value
+-   replace the observation's missing value based on previous or next value
+
+With the `{tidyr}` we can do all these three methods quite easily with the following functions:
+
+-   `drop_na()`
+-   `replace_na()`
+-   `fill()`
+
+### Dropping `NA`s
+
+```{r}
+#| label: drop-na-all
+
+# drop all rows with an NA
+cereals_df |> 
+  drop_na()
+```
+
+```{r}
+#| label: drop-na-based-on-column
+
+# drop rows with NA in certain column
+cereals_df |> 
+  drop_na(oats)
+```
+
+### Replacing `NA`s
+
+```{r}
+#| label: replace-na-dataframe
+
+# Replace NAs in barley and oats
+cereals_df |> 
+  replace_na(list(barley = 0, oats = 0))
+```
+
+::: callout-note
+The replacement value must be the same data type as the column's data type, otherwise an error will be thrown.
+:::
+
+The `replace_na()` can also be used within `{dplyr}`'s `mutate()` to target a specific column.
+
+```{r}
+#| label: replace-na-mutate
+
+# Replace NAs in barley
+cereals_df |> 
+  mutate(barley = replace_na(barley, 0))
+```
+
+Rather than replace by a user defined value, `NA`s can be replaced by values in proximity to the missing value.
+
+```{r}
+#| label: fill-example
+
+# Filling values based on 
+cereals_df |> 
+  filter(between(year, 1980, 2023)) |> 
+  fill(rye, mixed_corn, .direction = "down") |> 
+  fill(triticale, .direction = "updown") |> 
+  fill(oilseed_rape, .direction = "up")
+```
+
+## Reshaping Data
+
+A dataframe can be reshaped by two types of pivoting: longer and wider.
+
+### Pivoting longer
+
+Pivoting longer is used to create tidy data, that is bring each observation into a row. 
+
+```{r}
+#| label: pivot-longer
+
+cereals_tidy_df <- cereals_df |> 
+  pivot_longer(
+    cols = wheat:oilseed_rape, 
+    names_to = "cereal", 
+    values_to = "yield",
+    values_drop_na = TRUE
+    )
+
+slice_sample(cereals_tidy_df, n = 10)
+```
+
+The advantages of creating tidy (long) data is that it makes it easier for analysis such creating summary statistics below and next week we will see it usefulness in data used by the `{ggplot2}` package.
+
+```{r}
+#| label: summary-stats
+
+# Summary stats of the cereal yield dataframe
+cereals_tidy_df |> 
+  summarise(
+    num = n(),
+    min = min(yield),
+    max = max(yield),
+    avg = mean(yield),
+    sd = sd(yield),
+    .by = cereal
+    )
+```
+
+### Pivoting Wider
+
+It is also possible to pivot tidy data into a wider format. You may want to pivot wider if you want to put data into a published table.
+
+```{r}
+#| label: pivot-wider
+
+cereals_tidy_df |> 
+  pivot_wider(names_from = cereal, values_from = yield)
+```
+
+## Uniting and Splitting Columns
+
+It is also possible to unite and split columns. For uniting and splitting columns we will use a few small data frames that included in `{tidyr}` package.
+
+### Uniting 
+
+The `unite()` function allows you to unite two or more columns together. The resulting column data type will be `<character>`.
+
+
+```{r}
+#| label: unite-example
+
+table5
+
+# want to unite century and year to create a proper date
+table5 |> 
+  unite(col = "year", century, year, sep = "") |> 
+  mutate(year = as.integer(year))
+```
+
+### Seperating
+
+It is also possible to separate a column either based on a position, delimiter or text pattern. 
+
+In addition to this, separation can be longer or wider.
+
+
+```{r}
+#| label: seperate-delim-example
+
+table3
+
+# splitting by delimiter - wider
+table3 |> 
+  separate_wider_delim(cols = rate, delim = "/", names = c("cases", "population"))
+
+# splitting by delimiter - wider
+table3 |> 
+  separate_longer_delim(cols = rate, delim = "/")
+```
+```{r}
+#| label: seperate-position-example
+
+# splitting by position - wider 
+# This creates table5 above
+table3 |> 
+  separate_wider_position(cols = year, widths = c(century = 2, year = 2))
+
+# splitting by position - longer
+table3 |> 
+  separate_longer_position(cols = year, width = 2)
+```
+
+
+
+## Nesting Data
+
+Another aspect that is included in the `{tidyr}` package is the concept to nesting data. In other words, nesting a `<data.frame>` within a `<data.frame>`.
+
+```{r}
+#| label: nest-example
+
+# Nest cereals_tidy_df based on cereal
+cereals_nested_df <- cereals_tidy_df |> 
+  nest(.by = cereal)
+
+cereals_nested_df
+```
+
+A nested data can also be unnested too.
+
+```{r}
+#| label: unnest-example
+
+# Unnest is the opposite of nesting
+cereals_nested_df |> 
+  unnest(cols = data)
+```
+
+We will come back to this concept in Week 6 when we will look at functional programming.
+
+## Importing Data - JSON
+
+JavaScript Object Notation (JSON) is a widely used format for exchanging data. Its advantages is that is lightweight, easy to parse and language independent. It has extensive uses from web apps, APIs, config files, data storage and data transmission.
+
+We will look at the very simple method of importing data from a JSON file via the `{jsonlite}` package.
+
+```{r}
+library(jsonlite)
+
+fromJSON("data/gdp-deflators.json")
+```
+
+There is another function within the `{jsonlite}` package that is used to read JSON, namely `read_json()`. The default behaviour is to return a `<list>`.
+
+```{r}
+#| label: read-json-list
+
+gdp_deflators_list <- read_json("data/gdp-deflators.json")
+
+str(gdp_deflators_list, list.len = 5)
+```
+
+By setting the `simplifyVector` argument to `TRUE` a `<data.frame>` is returned (if it can be created).
+
+```{r}
+#| label: read-json-df
+
+# Reading in data 
+gdp_deflators_df <- read_json("data/gdp-deflators.json", simplifyVector = TRUE)
+
+gdp_deflators_df
+```
