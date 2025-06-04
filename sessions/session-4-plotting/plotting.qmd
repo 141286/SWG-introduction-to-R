@@ -1,0 +1,381 @@
+---
+title: "Session 4: Plotting"
+date: "2025-06-04"
+date-format: D MMMM YYYY
+date-modified: today
+fontsize: "11"
+format:
+  html:
+    code-line-numbers: true
+    highlight-style: a11y
+    theme:
+      light: flatly
+      dark: darkly
+    embed-resources: true
+    toc: true
+    toc-depth: 2
+---
+
+```{r}
+#| label: init
+```
+
+### This session will cover:
+
+-   Introduction to grammar of graphics and the `{ggplot2}` package
+-   Basic plots: scatter plots, bar charts, histograms, lines
+-   Customizing plots: themes, labels, and colours
+-   Saving and exporting plots
+
+## Setup
+
+We will only need one new package for today, the `{afcharts}` package by the Government Analysis Function. It can be installed as follows:
+
+```{r}
+#| eval: false
+# install the Government Analysis Function's {ggplot2} theme package
+install.packages("afcharts")
+```
+
+We will load in the following packages for today's session. We have seen most of these packages before. 
+
+```{r}
+#| label: load-packages
+#| message: false
+library(afcharts)
+library(dplyr)
+library(ggplot2)
+library(janitor)
+library(jsonlite)
+library(readr)
+library(readxl)
+library(tidyr)
+```
+
+We will use the cereals, GDP deflators and MMO vessels data that we have used previously. 
+
+```{r}
+#| label: load-data
+#| message: false
+
+# Cereals data and transform it into tidy data
+cereals_df <- read_csv("data/cereals.csv", name_repair = make_clean_names) |> 
+  pivot_longer(
+    cols = -year,
+    names_to = "cereal",
+    values_to = "yield",
+    values_drop_na = TRUE
+  )
+
+# UK GDP deflators series
+gdp_deflators_df <- read_json("data/gdp-deflators.json", simplifyVector = TRUE)
+
+# MMO vessel list
+vessels_df <- read_xlsx("data/May_2025_Over_10m_vessel_list.xlsx", skip = 4, .name_repair = make_clean_names)
+```
+
+## Plotting in R
+
+One of the main features and advantages of R is the ease at which to create data visualisations with is its built-in graphics capabilities. Base R has a number of plot types available as follows:
+
+
+```{r}
+#| label: base-R-graphics
+
+# scatter plot
+plot(x = vessels_df$overall_length, y = vessels_df$vessel_capacity_units)
+
+# line plot
+plot(x = gdp_deflators_df$year, y = gdp_deflators_df$index, type = "l")
+
+# line and point plot
+plot(x = gdp_deflators_df$year, y = gdp_deflators_df$index, type = "o", pch = 20)
+
+# bar plot
+barplot(yield ~ year, data = cereals_df[cereals_df$cereal == "triticale",])
+
+# histogram
+hist(cereals_df$yield)
+
+# boxplot
+boxplot(yield ~ cereal, data = cereals_df)
+```
+
+Whilst very easy to create such plots, there is a inconsistency across plotting function as to how arguments are specified. To make a more intricate plot is not straight forward. Therefore we will use the tidyverse plotting package `{ggplot2}`.
+
+## Grammar of Graphics and `{ggplot2}`
+
+The Grammar of Graphics is a framework for data visualization that dissects each component of a graph into individual components. This framework was introduced by Leland Wilkinson in his 1999 book [*The Grammar of Graphics*](https://link.springer.com/book/10.1007/0-387-28695-0) and provides the theoretical underpinnings of the [`{ggplot2}`](https://ggplot2.tidyverse.org/) package.
+
+![Individual components of a plot. Source: Quebec Center for Biodiversity Science](https://r.qcbs.ca/workshop03/book-en/images/gglayers.png){fig-align="center"}
+
+The idea is to breakdown a graphic into a set of independent components that can be combined in a systematic way. Here are an explanation the key components:
+
+- **Data** - the data to be visualised. For `{ggplot2}` this should be in a **tidy** format.
+
+- **Aesthetics** or **Mappings** - the visual properties that represent data, such as position (x, y), colour, fill, linetype,  size, shape, *etc*.
+
+- **Geometries** - the type of plot or shape used to represent the data, like points, lines, bars, *etc*.
+
+- **Statistics** - statistical transformations applied to the data.
+
+- **Scales** - maps data values to aesthetic values (*e.g.* a numeric variable to a colour gradient).
+
+- **Facets** - subplots that split the data into subsets based on one or more variables.
+
+- **Coordinates** - the coordinate system used (*e.g.* Cartesian, polar).
+
+- **Themes** - controls the non-data elements of the plot like background, grid lines, and fonts.
+
+
+## Creating a Plot with `{ggplot2}`
+
+We will use the `gdp_deflators_df` to create a plot of the percentage change over time. 
+
+### Create a canvas
+
+To create any `{ggplot2}` graph, you begin by creating a ggplot object which is a blank canvass.
+
+```{r}
+#| label: canvas
+
+# Create the plot canvas
+gdp_deflators_df |> 
+  ggplot()
+```
+
+
+### Apply aesthetics
+
+The next step is to apply aesthetics. Here we want to set the x-axis to year and the y-axis to percentage change. Aesthetic mappings are done within the `aes()` function. 
+
+```{r}
+#| label: aes
+
+# Create the plot canvas
+gdp_deflators_df |> 
+  # apply aesthetics
+  ggplot(mapping = aes(x = year, y = pct_change))
+```
+
+
+### Addying layers
+
+
+
+To add a line plot, we use the `geom_line()` function.
+
+```{r}
+#| label: geom_line
+#| warning: false
+
+# Create the plot canvas
+gdp_deflators_df |> 
+  ggplot(aes(x = year, y = pct_change)) +
+  # create a line plot
+  geom_line()
+```
+
+We can use a different plot type like points plot by using `geom_points()` instead. 
+
+```{r}
+#| label: geom_point
+#| warning: false
+
+
+gdp_deflators_df |> 
+  ggplot(aes(x = year, y = pct_change)) +
+  # create a point plot instead
+  geom_point()
+```
+
+Or we can combine two layers as so. 
+
+
+```{r}
+#| label: geom_line_point
+#| warning: false
+
+gdp_deflators_df |> 
+  ggplot(aes(x = year, y = pct_change)) +
+  # combine line and point plot together
+  geom_line() +
+  geom_point()
+```
+
+A bar plot can be created by the `geom_col()`
+
+```{r}
+#| label: geom_col
+#| warning: false
+
+gdp_deflators_df |> 
+  ggplot(aes(x = year, y = pct_change)) +
+  # create a bar chart
+  geom_col()
+```
+
+::: .callout-info
+You will also see code that uses `geom_bar()` to create bar charts. The default behaviour for this geometry is to plot the number of counts of the specified `x` argument. 
+:::
+
+Apart from the mapping of a variable to an axis, we can also map variables to other aesthetics, such as fill/colour, size, linetype, alpha to convey more information about the data. 
+
+Say we want to distinguish between observed and forecast values. The values for the years beyond 2024 are forecast. 
+
+We can create a variable in the data before it is piped to `ggplot()` called `forecast` which does this. Then within the `aes()` a `fill` argument can be set as forecast.  
+
+```{r}
+#| label: geom_col_2
+#| warning: false
+
+gdp_deflators_df |> 
+  # create a variable to show if it is a forecast
+  mutate(forecast = if_else(year > 2024, "yes", "no")) |> 
+  # apply this a mapping to distinguish between forecast and observed
+  ggplot(aes(x = year, y = pct_change, fill = forecast)) +
+  geom_col()
+```
+
+This calculation can be done within the `aes()` itself rather than within a `mutate()` beforehand.  
+
+```{r}
+#| label: geom_col_3
+#| warning: false
+
+
+gdp_deflators_df |> 
+  ggplot(aes(x = year, y = pct_change, fill = if_else(year > 2024, "yes", "no"))) +
+  geom_col()
+```
+
+
+## Improving Visulations
+
+Whilst the above creates the visualisations, there are many tweaks we need to do to make them a lot more aesthetically pleasing. This can be done by a number of ways, including labelling,  and by applying a theme. 
+
+### Apply labels
+
+There a number of ways to apply labels to a plot but the `labs()` function is the most useful as it can apply a title, subtitle, caption and change the aesthetics labels too. 
+
+```{r}
+#| label: labels
+#| warning: false
+
+gdp_deflators_df |> 
+  ggplot(aes(x = year, y = pct_change, fill = if_else(year > 2024, "yes", "no"))) +
+  geom_col() +
+  # applying lables to the plot
+  labs(
+    title = "Changes in the UK GDP Deflator Index",
+    subtitle = "From 1956 to 2029",
+    x = NULL,
+    y = "Percentage Change",
+    fill = "Forecast",
+    caption = "Source: HMT"
+  )
+```
+
+### Changing scales
+
+The `scales_*()` set of functions are used to control the aesthetics specified in the `aes()` function. 
+
+```{r}
+#| label: scale_fill
+#| warning: false
+
+
+gdp_deflators_df |> 
+  ggplot(aes(x = year, y = pct_change, fill = if_else(year > 2024, "yes", "no"))) +
+  geom_col() +
+  labs(
+    title = "Changes in the UK GDP Deflator Index",
+    subtitle = "From 1956 to 2029",
+    x = NULL,
+    y = "Percentage Change",
+    fill = "Forecast",
+    caption = "Source: HMT"
+  ) +
+  scale_fill_brewer(palette = "Set2")
+```
+
+
+### Applying a theme
+
+To control the non-data elements of the plot, a themes can be applied. A number of basic themes are included within the `{ggplot2}` package. All these are in the form of `theme_*()`. 
+
+
+```{r}
+#| label: theme
+#| warning: false
+
+
+gdp_deflators_df |> 
+  ggplot(aes(x = year, y = pct_change, fill = if_else(year > 2024, "yes", "no"))) +
+  geom_col() +
+  labs(
+    title = "Changes in the UK GDP Deflator Index",
+    subtitle = "From 1956 to 2029",
+    x = NULL,
+    y = "Percentage Change",
+    fill = "Forecast",
+    caption = "Source: HMT"
+  ) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_classic()
+```
+
+By using the Government Analysis Function theme as supplied by `{afcharts}` package, we get the following:
+
+```{r}
+#| label: theme_af
+#| warning: false
+
+
+gdp_deflators_df |> 
+  ggplot(aes(x = year, y = pct_change, fill = if_else(year > 2024, "yes", "no"))) +
+  geom_col() +
+  labs(
+    title = "Changes in the UK GDP Deflator Index",
+    subtitle = "From 1956 to 2029",
+    x = NULL,
+    y = NULL,
+    fill = "Forecast",
+    caption = "Source: HMT"
+  ) +
+  # applying AF colour theme 
+  scale_fill_discrete_af() +
+  # apply the AF theme
+  theme_af()
+```
+
+## Saving plots
+
+Plots created can be saved as an image. This includes png, jpeg, svg and pdf formats. The format is determined by file extension specified in the `filename` argument. 
+
+```{r}
+#| label: saving
+#| warning: false
+
+ggsave(filename = "images/gdp-deflators.png")
+```
+
+By default, the last plot created is saved.
+
+In addition, the height, width, image quality can call be specified when saving. 
+
+We will save a pdf of the image, with a width of 20cm, height of 12cm and a dip (dots per inch) of 400. 
+
+```{r}
+#| label: saving_2
+#| warning: false
+
+ggsave(
+  filename = "images/gdp-deflators.pdf",
+  width = 20,
+  height = 12,
+  units = "cm",
+  dpi = 400
+  )
+```
+
