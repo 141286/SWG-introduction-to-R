@@ -1,0 +1,647 @@
+---
+title: "Session 5: Strings, Dates and Tables"
+date: "2025-06-11"
+date-format: D MMMM YYYY
+date-modified: today
+fontsize: "11"
+format:
+  html:
+    code-line-numbers: true
+    highlight-style: a11y
+    theme:
+      light: flatly
+      dark: darkly
+    embed-resources: true
+    toc: true
+    toc-depth: 2
+---
+
+### This session will cover:
+
+-   String operations
+-   Formatting and parsing dates
+-   Creating and manipulating tables
+-   Saving and exporting tables
+-   Basic web scraping to import webpage tables
+
+## Setup
+
+We will only need one new package for today, the `{gt}` package. It can be installed as follows:
+
+```{r}
+#| eval: false
+# install the gt package
+install.packages("gt")
+
+# to save tables, need webshot2 package
+install.packages("webshot2")
+```
+
+We will load in the following packages for today's session.
+
+```{r}
+#| label: load-packages
+#| message: false
+library(dplyr)
+library(janitor)
+library(readr)
+library(readxl)
+library(tidyr)
+```
+
+We will use the cereals and MMO vessels data that we have used previously.
+
+```{r}
+#| label: load-data
+#| message: false
+
+# Cereals data and transform it into tidy data
+cereals_df <- read_csv("data/cereals.csv", name_repair = make_clean_names) |>
+    pivot_longer(
+        cols = -year,
+        names_to = "cereal",
+        values_to = "yield",
+        values_drop_na = TRUE
+    )
+
+# MMO vessel list
+vessels_df <- read_xlsx(
+    "data/May_2025_Over_10m_vessel_list.xlsx",
+    skip = 4,
+    .name_repair = make_clean_names
+)
+```
+
+## Strings
+
+We haven't given much thought to strings so far even though the data we have been using contains it. Being able work with strings allows to conduct data analysis more efficiently. 
+
+We will generally use the `{stringr}` package to do due to its cohesive function design.
+
+```{r}
+#| label: load-stringr
+library(stringr)
+```
+
+```{r}
+#| label: simple-base-R-string-manipulation
+
+# Basic manipulation of strings with base R
+defra_orgs <- c(
+    "forestry commission",
+    "environment agency",
+    "animal and plant health agency",
+    "British WOOL"
+)
+
+# change to all upper case
+toupper(defra_orgs)
+
+# change to all lower case
+tolower(defra_orgs)
+
+# change to title case
+tools::toTitleCase(defra_orgs)
+```
+
+The `{stringr}` package has equivalent functions to these are follows:
+
+-   `str_to_upper()` same as `toupper()`
+-   `str_to_lower()` same as `tolower()`
+-   `str_to_title()` similar to `tools::toTitleCase()`
+
+In addition, it also has a `str_to_sentence()` function to capitalise the first letter of a sentence.
+
+```{r}
+#| label: sentence-case
+
+# change to sentence case
+str_to_sentence(defra_orgs)
+```
+
+::: callout-note
+There are slight differences between the behaviour between `tools::toTitleCase()` and `str_to_title()`.
+
+`tools::toTitleCase()` does not capitalise conjunctions and prepositions.
+:::
+
+It also possible to manipulate strings by removing or replacing certain patterns contained within the string.
+
+```{r}
+#| label: str-remove-replace
+
+str_remove_all(defra_orgs, "agency")
+
+str_replace_all(defra_orgs, "agency", "bureau")
+```
+
+Whitespace is also a problem that is encountered with strings. 
+
+```{r}
+#| label: white-space-example
+
+# add whitespace
+defra_orgs_ws <- paste("  ", defra_orgs, "    defra ")
+defra_orgs_ws
+
+# remove leanding and/or trailing whitespace
+str_trim(defra_orgs_ws)
+
+# remove whitespace between words too
+str_squish(defra_orgs_ws)
+```
+
+We will use some of the functions above to clean data from the vessels dataset.
+
+```{r}
+head(vessels_df)
+```
+
+We can see that many of the text columns are in uppercase. Instead we would like to convert these to title case.
+
+```{r}
+#| label: clean-vessels
+
+vessels_df |>
+    mutate(
+        # bring some text columns to title case
+        administrative_port = str_to_title(administrative_port),
+        home_port = str_to_title(home_port),
+        fish_producer_organisation = str_to_title(fish_producer_organisation),
+        # fix FPO acronym
+        fish_producer_organisation = str_replace(
+            fish_producer_organisation,
+            "Fpo",
+            "FPO"
+        )
+    ) |>
+    head()
+```
+
+When applying same function across multiple columns in a mutate as above, this can be reduced to using the `across()` from `{dplyr}`.  
+
+```{r}
+#| label: clean-vessels-across
+
+vessels_df |>
+    mutate(
+        # bring some text columns to title case
+        across(
+            .cols = c(
+                administrative_port,
+                home_port,
+                fish_producer_organisation
+            ),
+            .fns = str_to_title
+        ),
+        # fix FPO acronym
+        fish_producer_organisation = str_replace(
+            fish_producer_organisation,
+            "Fpo",
+            "FPO"
+        )
+    ) |>
+    head()
+```
+
+In addition to manipulating/changing strings, it is possible to detect patterns within a string and be returned a boolean value. 
+
+```{r}
+#| label: detect-pattern
+
+# check if agency in the name of the defra organisations
+str_detect(defra_orgs, "agency")
+```
+
+This is very useful for things like filtering. 
+
+```{r}
+#| label: filtering-based-on-pattern
+
+# Filter for vessels with QUEEN in the vessels name
+vessels_df |>
+    filter(str_detect(vessel_name, "QUEEN"))
+
+```
+
+## Dates
+
+Dates and times can be tricky to deal with in R. The many of the base R functions are not very intuitive and have confusing names. Additionally, dates can come in many formats which makes working with them very difficult and easy to introduce bugs or errors.
+
+```{r}
+#| label: load-lubridate
+#| message: false
+
+library(lubridate)
+```
+
+With in R, the `Sys.Date()` and `Sys.time()` can be used to get todays date and datetime respectively. 
+
+```{r}
+# Today's date
+today <- Sys.Date()
+today
+
+# Current time
+now <- Sys.time()
+now
+```
+
+### Parsing dates
+
+When parsing a string into a date object in R, the base R function of `as.Date()` would like the date to be in the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format, *i.e.* **yyyy-mm-dd**.
+
+```{r}
+#| label: parsing-date-1
+
+# ISO 8601
+new_year_day <- "2025-01-01"
+as.Date(new_year_day)
+
+# wrongly parsed
+st_johns_eve <- "23-06-2025"
+as.Date(st_johns_eve)
+```
+
+If there are cases where the dates you have are not in the ISO 8601 format, from the `{lubridate}` package offers some very use functions that allow you to convert it to a date with ease.
+
+```{r}
+#| label: parsing-dates
+
+# dd/m/yy
+st_patrick <- "17/3/25"
+dmy(st_patrick)
+
+# dd-mm-yyyy
+battle_of_boyne <- "12-07-2025"
+dmy(battle_of_boyne)
+
+# yy.mm.dd
+st_george <- "25.04.23"
+ymd(st_george)
+
+# mm/dd/yyyy
+st_andrew <- "11/30/2025"
+mdy(st_andrew)
+
+# yyyymm
+st_david <- "202503"
+ym(st_david)
+
+# heterogeneous dates
+regional_dates <- c(st_david, st_patrick, st_george, battle_of_boyne, st_andrew)
+parse_date_time(regional_dates, orders = c("ymd", "dmy"))
+```
+
+You will notice that St Patrick's Day has been parsed incorrectly. The order of the date formats in the orders argument matters. However, changing the order would mean that St George's Day would be parsed incorrectly. So be careful when parsing dates. It can introduce errors if not checked properly.
+
+Sometimes when reading in dates from an excel file, the reader is unable to parse the date and instead a number is returned. If this happens, it can be rectified using the `excel_numeric_to_date()` function from the `{janitor}` package.
+
+```{r}
+#| label: parse-excel-date
+
+# sample dataframe with date as a numeric
+data.frame(
+    problem = c("Y2K", "Year 2038 problem"),
+    date = c(36526, 50424)
+) |>
+    mutate(
+        date = excel_numeric_to_date(date)
+    )
+```
+
+### Formatting date output
+
+Dates can be converted to string using `format()` and strftime format specifications.
+
+| Code | Example | Description |
+|---------------|---------------|------------------------------------------|
+| `%a` | Sun | Weekday as locale’s abbreviated name. |
+| `%A` | Sunday | Weekday as locale’s full name. |
+| `%w` | 0 | Weekday as a decimal number, where 0 is Sunday and 6 is Saturday. |
+| `%d` | 08 | Day of the month as a zero-padded decimal number. |
+| `%e` |  8 | Day of the month as a space-padded decimal number. |
+| `%b` | Sep | Month as locale’s abbreviated name. |
+| `%B` | September | Month as locale’s full name. |
+| `%m` | 09 | Month as a zero-padded decimal number. |
+| `%y` | 25 | Year without century as a zero-padded decimal number. |
+| `%Y` | 2025 | Year with century as a decimal number. |
+| `%H` | 07 | Hour (24-hour clock) as a zero-padded decimal number. |
+| `%I` | 07 | Hour (12-hour clock) as a zero-padded decimal number. |
+| `%p` | AM | Locale’s equivalent of either AM or PM. |
+| `%M` | 06 | Minute as a zero-padded decimal number. |
+| `%S` | 05 | Second as a zero-padded decimal number. |
+| `%f` | 000000 | Microsecond as a decimal number, zero-padded to 6 digits. |
+| `%z` | +0000 | UTC offset in the form ±HHMM\[SS\[.ffffff\]\] (empty string if the object is naive). |
+| `%Z` | UTC | Time zone name (empty string if the object is naive). |
+| `%j` | 251 | Day of the year as a zero-padded decimal number. |
+| `%U` | 36 | Week number of the year (Sunday as the first day of the week), zero-padded. |
+| `%W` | 35 | Week number of the year (Monday as the first day of the week), zero-padded. |
+| `%c` | Wed Jun 11 00:00:00 2025 | Locale’s appropriate date and time representation. |
+| `%x` | 11/06/2025 | Locale’s appropriate date representation. |
+| `%X` | 07:06:05 | Locale’s appropriate time representation. |
+| `%%` | \% | A literal '%' character. |
+
+: List of strftime format specifications
+
+```{r}
+# dd/mm/yyyy
+format(today, "%d/%m/%Y")
+
+#  dd mmmm yy
+format(today, "%d %b %y")
+
+# dddd, d mmmm yyyy
+format(today, "%A, %e %B %Y")
+
+# Day of the year, week number
+format(today, "Day number: %j; Week number: %W")
+
+```
+
+### Calculations on dates
+
+It is possible to conduct calculations on date objects too. Days can be added or subtracted to a date, while the difference between dates can also be calculated by 
+
+```{r}
+# 20 days time from today
+today + 20
+
+# Number of days since New Years Day
+today - as.Date(new_year_day)
+
+# Extract today's year
+year(today)
+
+# Extract today's month
+month(today)
+
+# Extract today's day
+day(today)
+```
+
+## Tables
+
+Last week we saw visualisation of data using `{ggplot2}`. While there is much focus on presenting data through plots and charts, tables seem to be given less focus. However, a well formatted table can just be as good in presenting data and results.
+
+There are a number of packages in R that allow for table to be composed, but we will use the `{gt}` package. It creates a grammar of tables framework in how a table should be construted. 
+
+```{r}
+#| message: false
+library(gt)
+```
+
+![Structure of a `{gt}` object. Source: `{gt}` website](https://gt.rstudio.com/reference/figures/gt_parts_of_a_table.svg){fig-align="center"}
+
+```{r}
+#| label: summary-stats
+
+summary_funcs <- list(
+    avg = mean,
+    sd = sd,
+    max = max,
+    min = min
+)
+
+# cerals summary statistics using summarise across
+cereals_summary <- cereals_df |>
+    summarise(
+        years = paste(min(year), "-", max(year)),
+        across(.cols = yield, .fns = summary_funcs),
+        .by = cereal
+    )
+
+cereals_summary
+```
+
+We would like to display this summary statistics in a table. This can be easily done by piping the dataframe into `gt()` function. It will create the following basic table.
+
+```{r}
+#| label: first-gt
+
+# Create gt object
+cereals_summary |>
+    gt()
+```
+
+Whilst it prints out a table, it is not very aesthetically pleasing. 
+
+```{r}
+#| label: better-gt
+
+cereals_summary |>
+    # Adjust cereals so they are more readable
+    mutate(
+        cereal = str_replace(cereal, "_", " "),
+        cereal = str_to_title(cereal)
+    ) |>
+    gt(rowname_col = "cereal") |>
+    # Add a title and subtitle to the table
+    tab_header(
+        title = md("**Summary Statistics of Crop Yields**"),
+        subtitle = md("*In the UK from 1885 to 2023*")
+    ) |>
+    # Add a source note to the bottom of the table
+    tab_source_note(md("***Source:** Defra*")) |>
+    # Add a spanner over min and max to indicate it is a range
+    tab_spanner(label = "Range", columns = c(yield_max, yield_min)) |>
+    # Format all the columns starting with yield
+    fmt_number(columns = starts_with("yield"), decimals = 1) |>
+    # Change the column names
+    cols_label(
+        cereal = "Cereal",
+        years = "Years",
+        yield_avg = "Average",
+        yield_sd = "Standard Deviation",
+        yield_max = "Maximum",
+        yield_min = "Minimum"
+    ) |>
+    # Align the columns
+    cols_align(align = "center", columns = -cereal) |>
+    # Set the column widths
+    cols_width(starts_with("yield") ~ px(100))
+```
+
+A more complicated table to create is by including plot within the table as such:
+
+```{r}
+#| label: table-with-nanoplots
+
+cereals_df |>
+    summarise(
+        years = paste(min(year), "-", max(year)),
+        across(.cols = yield, .fns = summary_funcs),
+        # Creates the data needed for the nanoplot
+        yield = paste(yield, collapse = ","),
+        .by = cereal
+    ) |>
+    gt(rowname_col = "cereal") |>
+    # Add a title and subtitle to the table
+    tab_header(
+        title = md("**Summary Statistics of Crop Yields**"),
+        subtitle = md("*In the UK from 1885 to 2023*")
+    ) |>
+    # Add a source note to the bottom of the table
+    tab_source_note(md("***Source:** Defra*")) |>
+    # Merge min and max to create a range column
+    cols_merge_range(
+        col_begin = yield_min,
+        col_end = yield_max,
+        sep = " - "
+    ) |>
+    # Format cereals column with function
+    fmt(columns = cereal, fns = \(x) {
+        str_replace_all(x, "_", " ") |> str_to_title()
+    }) |>
+    # Format all the columns starting with yield
+    fmt_number(columns = starts_with("yield"), decimals = 1) |>
+    cols_nanoplot(
+        columns = yield,
+        plot_type = "boxplot",
+        new_col_label = "Distribution"
+    ) |>
+    # Change the column names
+    cols_label(
+        cereal = "Cereal",
+        years = "Years",
+        yield_avg = "Average",
+        yield_sd = "Standard Deviation",
+        yield_min = "Range"
+    ) |>
+    cols_align(align = "center", columns = -cereal) |>
+    cols_width(starts_with("yield") ~ px(100))
+```
+
+It is also possible to do grouped tables.
+
+```{r}
+#| label: grouped-table
+
+top3_tbl <-
+    vessels_df |>
+    # Remove dublicate vessels
+    distinct(vessel_name, .keep_all = TRUE) |>
+    slice_max(
+        order_by = vessel_capacity_units,
+        n = 3,
+        by = administrative_country
+    ) |>
+    select(
+        administrative_country,
+        vessel_name,
+        administrative_port,
+        home_port,
+        vessel_capacity_units
+    ) |>
+    gt(
+        rowname_col = "vessel_name",
+        groupname_col = "administrative_country"
+    ) |>
+    tab_header(
+        title = md("**Top 3 Fishing Vessels by Capacity of each Home Nation**"),
+        subtitle = "In May 2025"
+    ) |>
+    tab_source_note(md("*Source: Marine Management Organisation*")) |>
+    cols_label_with(fn = \(x) str_replace_all(x, "_", " ") |> str_to_title()) |>
+    cols_width(everything() ~ px(175)) |>
+    cols_align(align = "center", columns = contains("port")) |>
+    fmt(where(is.character), fns = str_to_title) |>
+    fmt_number(where(is.numeric), decimals = 0)
+
+top3_tbl
+```
+
+There a number of ways a table can be saved. An image of the table can be saved using the `gtsave()` function. 
+
+```{r}
+#| label: saving-table
+#| message: false
+
+gtsave(top3_tbl, "top-3-vessels.png")
+```
+
+Other ways to export tables are convert them into other formats such as HTML, LaTeX, RTF (Rich Text Formatted) and MS Word by passing the table to `as_raw_html()`, `as_latex()`, `as_rtf()` and `as_word()`. 
+
+## Web Scraping
+
+There are many times where the data you would like to use does not come in a file format such as CSV, excel, JSON *etc.* Sometimes the data you would like to use is on a webpage.
+
+Here we will only look at the very simple method of extracting data from HTML tables from a website.
+
+What is HTML? HTML stands for **HyperText Markup Language**. It's the standard language used to create and structure content on the web. 
+
+
+``` html
+<table>
+  <tr>
+    <th>Company</th>
+    <th>Contact</th>
+    <th>Country</th>
+  </tr>
+  <tr>
+    <td>Alfreds Futterkiste</td>
+    <td>Maria Anders</td>
+    <td>Germany</td>
+  </tr>
+  <tr>
+    <td>Centro comercial Moctezuma</td>
+    <td>Francisco Chang</td>
+    <td>Mexico</td>
+  </tr>
+</table>
+```
+
+```{=html}
+<style>
+table, th, td {
+  border:1px solid black;
+}
+</style>
+```
+
+| Company                    | Contact         | Country |
+|----------------------------|-----------------|---------|
+| Alfreds Futterkiste        | Maria Anders    | Germany |
+| Centro comercial Moctezuma | Francisco Chang | Mexico  |
+
+<hr>
+
+To conduct web scraping, we will use the [`{rvest}` package](https://rvest.tidyverse.org/). The package should already be installed with the `{tidyverse}`.
+
+```{r}
+#| label: load-rvest
+#| message: false
+library(rvest)
+```
+
+The webpage is read by the `read_html()` function. Just provide the webpage's URL.
+
+```{r}
+#| label: read-webpage
+
+# Non-traded carbon prices URL
+url <- "https://www.gov.uk/government/publications/valuing-greenhouse-gas-emissions-in-policy-appraisal/valuation-of-greenhouse-gas-emissions-for-policy-appraisal-and-evaluation"
+
+# read in the webpage
+doc <- read_html(url)
+doc
+```
+
+::: callout-note
+The `read_html()` function only works well with statically served webpages.
+:::
+
+HTML tables can be extracted by passing the document to `html_table()`. This will return a list of tables present within the document. 
+
+```{r}
+
+# extract all HTML tables from the document
+tables <- html_table(doc)
+str(tables)
+
+# take first table from list and clean the tables column names
+carbon_prices_df <- tables[[1]] |>
+    clean_names()
+
+head(carbon_prices_df)
+```
