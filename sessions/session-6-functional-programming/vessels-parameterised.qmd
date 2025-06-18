@@ -1,0 +1,83 @@
+---
+title: Summary of Vessels 10 metres and over
+subtitle: May 2025
+format:
+  html:
+    embed-resources: true
+    tbl-cap-location: top
+execute: 
+  echo: false
+params:
+  country: "England"
+---
+
+
+```{r}
+#| label: load-library
+#| message: false
+
+library(dplyr)
+library(readxl)
+library(stringr)
+library(gt)
+
+clean_col_names <- function(x) {
+    col_name <- str_replace_all(x, "_", " ") |>
+        str_to_title()
+
+    md(paste0("**", col_name, "**"))
+}
+```
+
+
+```{r}
+#| label: load-data
+
+vessels_df <- read_xlsx(
+    here::here("data/May_2025_Over_10m_vessel_list.xlsx"),
+    skip = 4,
+    .name_repair = janitor::make_clean_names
+) |>
+    filter(administrative_country == params$country)
+```
+
+<hr>
+
+### Number of Vessels in `r params$country`: `r nrow(vessels_df)`
+
+<hr><br>
+
+```{r}
+#| label: tbl-port
+#| tbl-cap: "Vessels 10 metres and over by administrative port"
+#| tbl-colwidths: [80, 20]
+
+vessels_df |>
+    count(administrative_port, name = "vessel_totals") |>
+    gt() |>
+    fmt_number(columns = vessel_totals, decimals = 0) |>
+    fmt(columns = administrative_port, fns = str_to_title) |>
+    cols_label_with(fn = clean_col_names) |>
+    cols_width(administrative_port ~ px(500), vessel_totals ~ px(150)) |>
+    as_raw_html()
+```
+
+<hr><br>
+
+```{r}
+#| label: tbl-fpo
+#| tbl-cap: "Vessels 10 metres and over by fish producer oraganisation"
+#| tbl-colwidths: [80, 20]
+#|
+vessels_df |>
+    count(fish_producer_organisation, name = "vessel_totals") |>
+    gt() |>
+    fmt_number(columns = vessel_totals, decimals = 0) |>
+    fmt(columns = fish_producer_organisation, fns = \(x) {
+        str_to_title(x) |> str_replace_all("Fpo", "FPO")
+    }) |>
+    cols_label_with(fn = clean_col_names) |>
+    cols_width(fish_producer_organisation ~ px(500), vessel_totals ~ px(150)) |>
+    as_raw_html()
+```
+
