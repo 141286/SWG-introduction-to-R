@@ -1,0 +1,247 @@
+---
+title: "Session 6: Functional Programming"
+date: "2025-05-18"
+date-format: D MMMM YYYY
+date-modified: today
+fontsize: "11"
+format:
+  html:
+    code-line-numbers: true
+    highlight-style: a11y
+    theme:
+      light: flatly
+      dark: darkly
+    embed-resources: true
+    toc: true
+    toc-depth: 2
+knitr:
+  opts_chunk: 
+    comment: "#>"
+---
+
+```{r}
+#| label: set-options
+#| include: false
+
+options(pillar.print_max = 5, tibble.print_max = 5, tibble.print_min = 5)
+```
+
+### This session will cover:
+
+-   Functions
+-   Introduction to functional programming techniques
+-   Mapping functions
+-   Introduction to Quarto
+-   Using Quarto for dynamic documents
+
+## Setup
+
+Load the following packages. 
+
+
+```{r}
+#| label: load-packages
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(readxl)
+```
+
+`library(tidyverse)` will load `{dplyr}`, `{forcats}`, `{ggplot2}`, `{lubridate}`, `{purrr}`, `{readr}`, `{stringr}`, `{tibble}` and `{tidyr}`.
+
+
+
+```{r}
+#| label: load-data
+#| message: false
+
+# Cereals data and transform it into tidy data
+cereals_df <- read_csv(
+    "data/cereals.csv",
+    name_repair = janitor::make_clean_names
+) |>
+    pivot_longer(
+        cols = -year,
+        names_to = "cereal",
+        values_to = "yield",
+        values_drop_na = TRUE
+    )
+
+# MMO vessel list
+vessels_df <- read_xlsx(
+    "data/May_2025_Over_10m_vessel_list.xlsx",
+    skip = 4,
+    .name_repair = janitor::make_clean_names
+)
+```
+
+
+## Functions
+
+As you will have noticed over the past six weeks, most of what we do in R involves applying functions. Even the assignment operator `<-` and the pipe operator `|>` are, under the hood, functions themselves. Understanding how functions work—and how to write your own—is a key step in becoming proficient in R.
+
+### Why use a function?
+
+Functions are essential in programming for several reasons:
+
+- **Reusability:** Once written, a function can be used multiple times without rewriting the same code.
+- **Readability:** Functions help break down complex problems into smaller, manageable pieces, making code easier to read and understand.
+- **Maintainability:** If something needs to change, you only need to update the function in one place.
+- **Abstraction:** Functions allow you to hide the details of implementation and focus on what the function does.
+- **Debugging:** Smaller, well-defined functions are easier to test and debug.
+
+In short, functions help you write cleaner, more efficient, and more reliable code.
+
+
+### The anathomy of a function
+
+Let’s break down the structure of a function in R:
+
+```r
+name <- function(arguments) {
+  body
+  return(x)
+}
+```
+Here’s what each part is:
+
+- Function Name: Is the name you give to your function. Choose something descriptive.
+- Arguments: Inside the parentheses, you define the inputs the function takes.
+- Body: This is the code that runs when the function is called.
+- Return Value: The return() function specifies what the function should output. If omitted, R will return the result of the last evaluated expression.
+
+An example of a user written function is as follows to calculate the square of input.
+
+```{r}
+my_squared <- function(x) {
+    x**2
+}
+
+my_squared(5)
+```
+
+## Applying/Mapping Functions
+
+Throughout the last 6 weeks, we've already encountered several examples of applying or mapping functions across data structures. These techniques are central to functional programming, a paradigm that treats computation as the evaluation of functions.
+
+### Where Have We Seen This Already?
+
+**Cleaning Column Names**
+
+Using `{janitor}`'s `make_clean_names()` function:
+
+
+```{r}
+read_xlsx(
+    "data/May_2025_Over_10m_vessel_list.xlsx",
+    skip = 4,
+    .name_repair = janitor::make_clean_names
+)
+```
+
+This applies a function to all column names to make them syntactically valid and consistent.
+
+**Using `across()` with `mutate()` and `summarise()`**
+
+With `{dplyr}`, we’ve used `across()` to apply a functions to multiple columns:
+
+```{r}
+vessels_df |>
+    mutate(
+        # bring some text columns to title case
+        across(
+            .cols = c(
+                administrative_port,
+                home_port,
+                fish_producer_organisation
+            ),
+            .fns = str_to_title
+        )
+    )
+```
+
+
+### The `{purrr}` package
+
+The [`{purrr}`](https://purrr.tidyverse.org/) package, part of the `{tidyverse}`, provides a consistent and expressive set of tools for applying functions to data structures like vectors, lists and data frames.
+
+**Why Use {purrr}?**
+
+- It’s type-stable: you know what type of output to expect.
+- It’s consistent: all mapping functions follow a similar naming convention.
+- It’s powerful: it handles complex nested data structures with ease. 
+
+The core mapping function is `map()` and `map_*()` variants.
+
+
+```{r}
+numbers_list <- list(1, 2, 3, 4)
+numbers_list
+
+# Square each number
+map(numbers_list, my_squared)
+```
+
+`map()` will always return a list. 
+
+```{r}
+numbers_vector <- c(1:4)
+map(numbers_vector, my_squared)
+```
+
+Instead of a list returned, you can specify the type returned with `map_*()` variant to reviece a vector. 
+
+```{r}
+map_int(numbers_list, my_squared)
+
+map_int(numbers_vector, my_squared)
+```
+
+The map variants are `map_int()` for integers, `map_dbl()` for doubles/real, `map_lgl()` for logical or boolean and `map_chr()` for character.
+
+## Quarto
+
+[Quarto](https://quarto.org/) is an open-source scientific and technical publishing system built for creating fully reproducible documents, presentations, websites and books. It supports a wide range of formats and programming languages.
+
+**Key Features of Quarto**
+
+1.  Multi-language Support:
+
+    -   Works with R, Python, Julia, and Observable JavaScript.
+    -   You can mix code and narrative text in a single document.
+
+2.   Multiple Output Formats:
+
+    -   HTML, PDF (LaTex, Typst), Word, ePub, slides (Reveal.js, PowerPoint, Beamer), and more.
+    -   Great for creating websites, blogs, books, and academic papers.
+
+3.   Markdown-based:
+
+    -   Uses enhanced Markdown syntax.
+    -   Easy to write and read, with support for citations, cross-references, and equations.
+
+4.  Reproducibility:
+
+    -   Integrates with Jupyter and `{knitr}` to ensure that documents are fully reproducible.
+    -   Supports parameterised reports and version control.
+
+5.  Publishing Tools:
+
+    -   Can publish directly to GitHub Pages, Netlify, Quarto Pub, or custom servers.
+    -   Ideal for creating personal websites, blogs, or collaborative documentation.
+
+6.  Extensibility:
+
+    -   Supports custom templates, filters, and extensions.
+    -   Can be integrated into CI/CD pipelines for automated publishing.
+
+
+Common Use Cases 
+
+- Reports and dashboards 
+- Academic papers and theses 
+- Blogs and documentation
+- Interactive tutorials and teaching materials
+- Books and ebooks
+
